@@ -20,13 +20,15 @@ export default {
         const { user_id } = data;
         const id = randomUUID();
         // with RETURNING
-        const session = await createSession.run(id, user_id);
-        return session.map(mapSession);
+        const session = await createSession.get(id, user_id);
+        return mapSession(session);
     },
     update: async (data: Session): Promise<Session> => {
         const { id, user_id } = data;
-        const session = await db.prepare('UPDATE sessions SET user_id = ? WHERE id = ? RETURNING').run(user_id, id);
-        return session.map(mapSession);
+        const session = await db
+        .prepare('UPDATE sessions SET user_id = ? WHERE id = ? RETURNING *')
+        .get(user_id, id);
+        return mapSession(session);
     },
     delete: async (id: Session['id']): Promise<void> => {
         await db.prepare('DELETE FROM sessions WHERE id = ?').run(id);

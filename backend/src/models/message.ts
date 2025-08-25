@@ -6,6 +6,7 @@ const mapMessage = (r: any): Message => ({
     session_id: r.session_id as string,
     role: r.role as string,
     content: r.content as string,
+    model: r.model as string | null,
     created_at: new Date(r.created_at as string),
 });
 
@@ -19,15 +20,18 @@ export default {
         const message = await db.prepare('SELECT * FROM messages WHERE id = ?').get(id);
         return message ? mapMessage(message) : null;
     },
-    create: async (data: Message): Promise<Message> => {
-        const { session_id, role, content } = data;
-        const id = randomUUID();
-        const message = await createMessage.run(id, session_id, role, content);
+    create: async (data: Omit<Message, 'id' | 'created_at'>): Promise<Message> => {
+        const { session_id, role, model, content } = data;
+        const id = randomUUID() as string;
+        console.log('data:',data)
+        const message = createMessage.get(id, session_id, role, model, content);
         return mapMessage(message);
     },
     update: async (data: Message): Promise<Message> => {
-        const { id, session_id, role, content } = data;
-        const message = await db.prepare('UPDATE messages SET session_id = ?, role = ?, content = ? WHERE id = ? RETURNING *').run(session_id, role, content, id);
+        const { id, session_id, role, content, model } = data;
+        const message = await db
+            .prepare('UPDATE messages SET session_id = ?, role = ?, content = ?, model = ? WHERE id = ? RETURNING *')
+            .get(session_id, role, content, model, id);
         return mapMessage(message);
     },
     delete: async (id: Message['id']): Promise<void> => {

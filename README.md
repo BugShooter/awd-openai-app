@@ -99,8 +99,13 @@ node_modules/
 dist/
 *.log
 .env
-*.{local,local.*}
+*.local
+*.local.*
 .DS_Store
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
 EOF
 ```
 
@@ -120,51 +125,44 @@ gh repo create BugShooter/awd-openai-app \
     --public --source=. --remote=origin --push
 ```
 
+### Example of OpenAI response
 
-2. Create a basic Express server in `index.js`:
-   ```javascript
-   const express = require('express');
-   const cors = require('cors');
-   const dotenv = require('dotenv');
-   const { Configuration, OpenAIApi } = require('openai');
-
-   dotenv.config();
-
-   const app = express();
-   app.use(cors());
-   app.use(express.json());
-
-   const configuration = new Configuration({
-       apiKey: process.env.OPENAI_API_KEY,
-   });
-   const openai = new OpenAIApi(configuration);
-
-   app.post('/api/messages', async (req, res) => {
-       const { message } = req.body;
-       try {
-           const response = await openai.createChatCompletion({
-               model: 'gpt-3.5-turbo',
-               messages: [{ role: 'user', content: message }],
-           });
-           res.json({ reply: response.choices[0].message.content });
-       } catch (error) {
-           console.error(error);
-           res.status(500).json({ error: 'Internal Server Error' });
-       }
-   });
-
-   const PORT = process.env.PORT || 5000;
-   app.listen(PORT, () => {
-       console.log(`Server is running on port ${PORT}`);
-   });
-   ```
-
-3. Create a `.env` file in the backend directory and add your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   ```
-
-4. Start the Express server:
-   ```bash
-   node index.js
-   ```
+```json
+{
+    "assistantMessage": {
+        "id": "chatcmpl-C8R2xi5LIeHE4AdFFamXEOMngaTwe",
+        "object": "chat.completion",
+        "created": 1756126627,
+        "model": "gpt-5-nano-2025-08-07",
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Assistant response should be here",
+                    "refusal": null,
+                    "annotations": []
+                },
+                "finish_reason": "stop"
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 35,
+            "completion_tokens": 5967,
+            "total_tokens": 6002,
+            "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+                "reasoning_tokens": 5440,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+            }
+        },
+        "service_tier": "default",
+        "system_fingerprint": null
+    }
+}
+```

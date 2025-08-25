@@ -1,10 +1,19 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import chatRouter from './routes/chat'
 
+if (!process.env.OPENAI_API_URL || !process.env.OPENAI_API_KEY) {
+    console.error('OpenAI API URL or API Key is not set');
+    process.exit(1);
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.text());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/chat', chatRouter);
 

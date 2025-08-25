@@ -2,7 +2,10 @@ node_modules/
 dist/
 *.log
 .env
-*.{local,local.*}
+*.local
+*.local.*
 .DS_Store
-public/*.{js,js.map}
-*.sqlite
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep

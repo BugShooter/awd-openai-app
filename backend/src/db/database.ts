@@ -26,6 +26,7 @@ database.exec(`
     session_id TEXT,
     role TEXT,
     content TEXT,
+    model TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -39,11 +40,11 @@ export const createSession = database.prepare('INSERT INTO sessions (id, user_id
 const defaultSessionId = randomUUID();
 createSession.run(defaultSessionId, defaultUserId);
 
-export const createMessage = database.prepare('INSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?) RETURNING *');
-const defaultMessageId = randomUUID();
-createMessage.run(defaultMessageId, defaultSessionId, 'user', 'Hello, world!');
+export const createMessage = database.prepare('INSERT INTO messages (id, session_id, role, model, content) VALUES (?, ?, ?, ?, ?) RETURNING *');
+// const defaultMessageId = randomUUID();
+// createMessage.run(defaultMessageId, defaultSessionId, 'user', null, 'Hello! Tell me a short story.');
 
-const query = database.prepare('SELECT * FROM messages ORDER BY created_at');
-console.log(query.all());
+// const query = database.prepare('SELECT * FROM messages ORDER BY created_at');
+// console.log(query.all());
 
 export default database;
