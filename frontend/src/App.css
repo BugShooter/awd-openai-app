@@ -1,7 +1,9 @@
 #root {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
   max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -33,10 +35,40 @@
   }
 }
 
-.card {
-  padding: 2em;
+.chat-container {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px 0;
+  flex-grow: 1;
+  min-height: 0;
+  height: 100%;
+  text-align: left;
 }
 
-.read-the-docs {
-  color: #888;
+.chat-container .sessions {
+  border-right: 1px solid #ccc;
+  padding-right: 10px;
+  overflow-y: auto;
+  flex: 0 0 200px;
+  /* fixed width */
+}
+
+.chat-container .messages {
+  flex-grow: 1;
+  margin-left: 10px;
+  min-height: 0;
+  /* allow overflow in flex container */
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.user-actions {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }

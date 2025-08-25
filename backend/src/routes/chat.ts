@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const session_id = await session.getAll().then(sessions => sessions[0].id);
-    const userMessage = await message.create({ session_id, role: 'user', model: null, content: JSON.stringify(req.body) });
-    const response = await sendToLLM(req.body);
+    const userMessage = await message.create({ session_id, role: 'user', model: null, content: req.body.content });
+    const response = await sendToLLM(req.body.content);
     const responseMessage = {
         session_id,
         role: response.choices[0].message.role,
@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
     console.log('assistantMessage', assistantMessage);
     getLogger(`chat-session-${session_id}.log`).info({ userMessage, assistantMessage });
 
-    res.status(201).json({ assistantMessage });
+    res.status(201).json(assistantMessage);
 });
 
 export default router;
