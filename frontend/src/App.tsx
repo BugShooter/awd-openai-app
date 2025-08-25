@@ -25,6 +25,7 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,6 +50,7 @@ function App() {
     // Handle sending the message
     console.log("Sending message:", message);
     try {
+      setIsSending(true);
       const response = await sendMessage(message);
       // console.log("Response from server:", response);
       // Example response structure {
@@ -70,13 +72,14 @@ function App() {
         status: 'completed',
       };
       setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+      setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
       userMessage.status = 'error';
-      // setMessages([...messages]);
+      setMessages((prevMessages) => [...prevMessages]);
+    } finally {
+      setIsSending(false);
     }
-
-    setMessage("");
   }
 
   return (
@@ -107,8 +110,9 @@ function App() {
               handleSendMessage();
             }
           }}
+          readOnly={isSending}
         />
-        <button onClick={handleSendMessage}>Send Message</button>
+        <button onClick={handleSendMessage} disabled={isSending}>Send Message</button>
       </div>
     </>
   )
