@@ -166,3 +166,80 @@ gh repo create BugShooter/awd-openai-app \
     }
 }
 ```
+
+## Exercise: Integrating LangChain 
+To enhance the capabilities of your Express.js backend, you can integrate LangChain, a powerful library for building applications with language models. Follow these steps to set up LangChain in your existing backend project:
+
+### Install LangChain
+```bash
+cd backend
+npm install langchain @langchain/openai @langchain/core
+```
+
+### Step1: wrap all of the api requests with LangChain.
+
+In this step, you will wrap all API requests with LangChain's `ChatOpenAI` instance to leverage its capabilities.
+Refer to the official LangChain documentation for more details:
+https://js.langchain.com/docs/integrations/chat/
+
+#### Example of using LangChain with OpenAI in your Express.js backend
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { AIMessage } from "@langchain/core/dist/messages/ai";
+
+const llm = new ChatOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  modelName:'gpt-5-nano',
+});
+
+const sendMessage = async (message: string): Promise<AIMessage> => {
+    const prompt = ChatPromptTemplate.fromMessages([
+        ["system", "Response als {style}."],
+        ["user", "{userMessage}"],
+    ]);
+
+    const formattedPrompt = await prompt.format({
+        style: 'Master Yoda',
+        userMessage: message
+    });
+
+    const response = await llm.invoke(formattedPrompt);
+
+    return response;
+};
+```
+
+#### Response example (AIMessage):
+```json
+{
+  "id": "chatcmpl-C8oCvFGJQufJ3jOdEyxeXgxdojYp4",
+  "content": "Hello, you are. The Force strong with you, it is. What guidance do you seek, hmm? Ask, and I will answer. Patience, you must have.",
+  "additional_kwargs": {},
+  "response_metadata": {
+    "tokenUsage": {
+        "promptTokens": 17,
+        "completionTokens": 1389,
+        "totalTokens": 1406
+    },
+    "finish_reason": "stop",
+    "model_name": "gpt-5-nano-2025-08-07"
+  },
+  "tool_calls": [],
+  "invalid_tool_calls": [],
+  "usage_metadata": {
+    "output_tokens": 1389,
+    "input_tokens": 17,
+    "total_tokens": 1406,
+    "input_token_details": {
+      "audio": 0,
+      "cache_read": 0
+    },
+    "output_token_details": {
+      "audio": 0,
+      "reasoning": 1344
+    }
+  }
+}
+```
