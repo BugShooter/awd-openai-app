@@ -28,6 +28,12 @@ interface AuthProps {
   sessions: Session[] | null;
 }
 
+const fetchMessages = async (sessionId: string) => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/${sessionId}`);
+  const data = await response.json();
+  return data as ChatMessage[];
+};
+
 const sendMessage = async (sessionId: string, message: string) => {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/${sessionId}`, {
     method: "POST",
@@ -51,10 +57,32 @@ function App({ user, sessions }: AuthProps) {
   }, [messages]);
 
   useEffect(() => {
-    if (sessions && sessions.length > 0 && sessions.findIndex(s => s.id === sessionId) === -1) {
-      setSessionId(sessions[0].id);
+    setSessionId(prevSessionId => {
+      if (!sessions || sessions.length === 0) return null;
+      if (sessions.findIndex(s => s.id === prevSessionId) === -1) {
+        return sessions[0].id;
+      }
+      return prevSessionId;
+    });
+  }, [sessions]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      setMessages([]);
+      return;
     }
-  }, [sessionId, sessions]);
+    const loadMessages = async () => {
+      try {
+        const messages = await fetchMessages(sessionId);
+        console.log('messages:', messages);
+        setMessages(messages);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+
+    loadMessages();
+  }, [sessionId]);
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -113,7 +141,7 @@ function App({ user, sessions }: AuthProps) {
           ))}
         </div>
         <div className="messages">
-          {messages.map((msg) => (
+          {messages && messages.map((msg) => (
             <div key={msg.id} className={`message ${msg.role}-message`}>
               <strong>{msg.role === 'user' ? 'You' : 'Assistant'}: </strong>
               {msg.content}
