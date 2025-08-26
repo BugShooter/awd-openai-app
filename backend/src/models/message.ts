@@ -77,7 +77,6 @@ export default {
     create: async (data: Omit<Message, 'id' | 'created_at'>): Promise<Message> => {
         const { session_id, role, model, content } = data;
         const id = randomUUID() as string;
-        console.log('data:',data)
         const message = createMessage.get(id, session_id, role, model, content);
         return mapMessage(message);
     },

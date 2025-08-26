@@ -5,13 +5,13 @@ import { AIMessage } from "@langchain/core/dist/messages/ai";
 export let llm: ChatOpenAI;
 
 type configParams = {
-    modelName?: string;
+    model?: string;
 } | undefined;
 
 export const config = (params: configParams = undefined) => {
     llm = new ChatOpenAI({
         apiKey: process.env.OPENAI_API_KEY,
-        modelName: params?.modelName || 'gpt-5-nano',
+        model: params?.model || 'gpt-5-nano',
     });
 };
 

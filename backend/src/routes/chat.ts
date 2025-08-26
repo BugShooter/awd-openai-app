@@ -22,7 +22,6 @@ router.post('/:session_id', async (req, res) => {
         content: String(response.content)
     };
     const assistantMessage = await Message.create(responseMessage);
-    console.log('assistantMessage', assistantMessage);
     getLogger(`chat-session-${session_id}.log`).info({ userMessage, assistantMessage });
 
     res.status(201).json(assistantMessage);
