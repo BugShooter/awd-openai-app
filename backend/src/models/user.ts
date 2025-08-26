@@ -58,7 +58,7 @@ export default {
         const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(id);
         return user ? mapUser(user) : null;
     },
-    create: async (data: User): Promise<User> => {
+    create: async (data: Omit<User, 'id'|'created_at'>): Promise<User> => {
         const { email, name } = data;
         const id = randomUUID();
         const user = await createUser.get(id, email, name);

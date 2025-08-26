@@ -55,6 +55,14 @@
   flex: 0 0 200px;
   /* fixed width */
 }
+.chat-container .sessions .session {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+.chat-container .sessions .session.active {
+  background-color: #f0f0f0;
+}
 
 .chat-container .messages {
   flex-grow: 1;

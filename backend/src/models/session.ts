@@ -78,7 +78,7 @@ export default {
         const session = await db.prepare('SELECT * FROM sessions WHERE id = ?').get(id);
         return session ? mapSession(session) : null;
     },
-    create: async (data: Session): Promise<Session> => {
+    create: async (data: Omit<Session, 'id' | 'created_at'>): Promise<Session> => {
         const { user_id } = data;
         const id = randomUUID();
         // with RETURNING

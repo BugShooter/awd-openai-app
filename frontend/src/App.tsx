@@ -7,6 +7,12 @@ interface User {
   name: string;
 }
 
+interface Session {
+  id: string;
+  user_id: string;
+  created_at: Date;
+}
+
 interface ChatMessage {
   id: string;
   session_id: string | null;
@@ -19,7 +25,7 @@ interface ChatMessage {
 
 interface AuthProps {
   user: User | null;
-  sessionId: string | null;
+  sessions: Session[] | null;
 }
 
 const sendMessage = async (sessionId: string, message: string) => {
@@ -33,15 +39,22 @@ const sendMessage = async (sessionId: string, message: string) => {
   return response.json();
 };
 
-function App({ user, sessionId }: AuthProps) {
+function App({ user, sessions }: AuthProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isSending, setIsSending] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (sessions && sessions.length > 0 && sessions.findIndex(s => s.id === sessionId) === -1) {
+      setSessionId(sessions[0].id);
+    }
+  }, [sessionId, sessions]);
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -67,15 +80,6 @@ function App({ user, sessionId }: AuthProps) {
     try {
       setIsSending(true);
       const response = await sendMessage(sessionId, message);
-      // console.log("Response from server:", response);
-      // Example response structure {
-      //     "id": "5e260447-704a-4f09-a3ff-32f153f858cf",
-      //     "session_id": "6e5764f2-0b33-4995-964a-ca3c44cdd576",
-      //     "role": "assistant",
-      //     "content": "Hello there.",
-      //     "model": "gpt-5-nano-2025-08-07",
-      //     "created_at": "2025-08-25T16:31:38.000Z"
-      // }
       userMessage.status = 'completed';
       const { id, role, model, content, created_at } = response;
       const assistantMessage: ChatMessage = {
@@ -103,7 +107,11 @@ function App({ user, sessionId }: AuthProps) {
       <h1>LLM Chat</h1>
       {user && <div className="user-info">Logged in as: {user.name}</div>}
       <div className="chat-container">
-        <div className="sessions"></div>
+        <div className="sessions">
+          {sessions && sessions.map((session) => (
+            <div key={session.id} className={`session ${session.id === sessionId ? 'active' : ''}`}>{session.id}</div>
+          ))}
+        </div>
         <div className="messages">
           {messages.map((msg) => (
             <div key={msg.id} className={`message ${msg.role}-message`}>
@@ -138,7 +146,7 @@ function App({ user, sessionId }: AuthProps) {
 // Component that handles authentication and wraps the App
 const AppWrapper = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -147,7 +155,11 @@ const AppWrapper = () => {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/auth`);
         const data = await response.json();
         setUser(data.user);
-        setSessionId(data.session_id);
+        setSessions(data.sessions.map((session: Session) => ({
+          id: session.id,
+          user_id: session.user_id,
+          created_at: new Date(session.created_at),
+        })));
       } catch (error) {
         console.error("Error fetching auth data:", error);
       } finally {
@@ -162,7 +174,7 @@ const AppWrapper = () => {
     return <div>Loading...</div>;
   }
 
-  return <App user={user} sessionId={sessionId} />;
+  return <App user={user} sessions={sessions} />;
 };
 
 export default AppWrapper;
