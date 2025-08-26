@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
 interface ChatMessage {
   id: string;
+  session_id: string | null;
   role: string;
   content: string;
   model: string | null;
@@ -10,8 +17,13 @@ interface ChatMessage {
   status: 'pending' | 'completed' | 'error';
 }
 
-const sendMessage = async (message) => {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
+interface AuthProps {
+  user: User | null;
+  sessionId: string | null;
+}
+
+const sendMessage = async (sessionId: string, message: string) => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/${sessionId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -21,7 +33,7 @@ const sendMessage = async (message) => {
   return response.json();
 };
 
-function App() {
+function App({ user, sessionId }: AuthProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,11 +45,15 @@ function App() {
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
+    if (!sessionId) {
+      console.error("No session ID available.");
+      return;
+    }
 
     // Create user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      // session_id: "1",
+      session_id: sessionId,
       role: "user",
       content: message,
       model: null,
@@ -46,12 +62,11 @@ function App() {
     };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-
     // Handle sending the message
     console.log("Sending message:", message);
     try {
       setIsSending(true);
-      const response = await sendMessage(message);
+      const response = await sendMessage(sessionId, message);
       // console.log("Response from server:", response);
       // Example response structure {
       //     "id": "5e260447-704a-4f09-a3ff-32f153f858cf",
@@ -65,6 +80,7 @@ function App() {
       const { id, role, model, content, created_at } = response;
       const assistantMessage: ChatMessage = {
         id,
+        session_id: sessionId,
         role,
         content,
         model,
@@ -85,6 +101,7 @@ function App() {
   return (
     <>
       <h1>LLM Chat</h1>
+      {user && <div className="user-info">Logged in as: {user.name}</div>}
       <div className="chat-container">
         <div className="sessions"></div>
         <div className="messages">
@@ -118,4 +135,34 @@ function App() {
   )
 }
 
-export default App
+// Component that handles authentication and wraps the App
+const AppWrapper = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAuthData = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth`);
+        const data = await response.json();
+        setUser(data.user);
+        setSessionId(data.session_id);
+      } catch (error) {
+        console.error("Error fetching auth data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuthData();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  return <App user={user} sessionId={sessionId} />;
+};
+
+export default AppWrapper;

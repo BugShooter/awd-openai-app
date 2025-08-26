@@ -10,11 +10,65 @@ const mapMessage = (r: any): Message => ({
     created_at: new Date(r.created_at as string),
 });
 
+interface searchCriteria {
+    session_id?: string;
+    role?: string;
+    content?: string;
+    model?: string;
+    created_at?: Date;
+}
+function prepareSearchCriteria(searchCriteria: searchCriteria): { where: string[]; params: (string | number)[] } {
+    const where: string[] = [];
+    const params: (string | number)[] = [];
+
+    if (searchCriteria.session_id) {
+        where.push('session_id = ?');
+        params.push(searchCriteria.session_id);
+    }
+    if (searchCriteria.role) {
+        where.push('role = ?');
+        params.push(searchCriteria.role);
+    }
+    if (searchCriteria.content) {
+        where.push('content = ?');
+        params.push(searchCriteria.content);
+    }
+    if (searchCriteria.model) {
+        where.push('model = ?');
+        params.push(searchCriteria.model);
+    }
+    if (searchCriteria.created_at) {
+        where.push('created_at = ?');
+        if (searchCriteria.created_at instanceof Date) {
+            params.push(searchCriteria.created_at.toISOString());
+        } else {
+            params.push(searchCriteria.created_at);
+        }
+    }
+
+    return {
+        where,
+        params
+    };
+}
+
 export default {
-    getAll: async (): Promise<Message[]> => {
-        const messages = await db.prepare('SELECT * FROM messages ORDER BY created_at').all();
-        console.log(messages);
-        return messages.map(mapMessage);
+    getOne: async (searchCriteria: searchCriteria): Promise<Message | null> => {
+        const { where, params } = prepareSearchCriteria(searchCriteria);
+
+        const message = await db
+            .prepare(`SELECT * FROM messages ${where.length ? 'WHERE ' + where.join(' AND ') : ''} LIMIT 1`)
+            .get(...params);
+        return message ? mapMessage(message) : null;
+    },
+    getAll: async (searchCriteria: searchCriteria): Promise<Message[]> => {
+        const { where, params } = prepareSearchCriteria(searchCriteria);
+
+        const messages = await db
+            .prepare(`SELECT * FROM messages ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY created_at`)
+            .all(...params);
+
+            return messages.map(mapMessage);
     },
     getById: async (id: Message['id']): Promise<Message | null> => {
         const message = await db.prepare('SELECT * FROM messages WHERE id = ?').get(id);
