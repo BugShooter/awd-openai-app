@@ -1,0 +1,6 @@
+# ignore node_modules, dist directories in all subdirectories
+node_modules/
+dist/
+
+*.local
+*.local.*
