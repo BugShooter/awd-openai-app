@@ -243,3 +243,107 @@ const sendMessage = async (message: string): Promise<AIMessage> => {
   }
 }
 ```
+
+### Step 2: Implement Tool Calling with LangChain
+
+Tool calling allows you to integrate external tools and APIs into your LangChain workflows. This can be useful for tasks such as fetching data from a database, calling a third-party API, or performing complex computations.
+
+To implement tool calling in your LangChain application, you can use the `tool` decorator to define a tool function. This function can then be called from within your LangChain prompts and workflows.
+
+For more information on tool calling, check out the official documentation:
+
+https://js.langchain.com/docs/how_to/tool_calling/
+
+#### Example of defining and using a tool in LangChain
+example of dice tool
+```typescript
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+
+/**
+ * Note that the descriptions here are crucial, as they will be passed along
+ * to the model along with the class name.
+ */
+const diceRollSchema = z.object({
+  rolls: z.number().min(1).describe("The number of dice to roll."),
+});
+
+const diceRollTool = tool(
+  async ({ rolls }) => {
+    const results = [];
+    for (let i = 0; i < rolls; i++) {
+      results.push(Math.floor(Math.random() * 6) + 1);
+    }
+    return results.join(", ");
+  },
+  {
+    name: "diceRoll",
+    description: "Rolls a dice with a specified number of sides.",
+    schema: diceRollSchema,
+  }
+);
+
+const llmWithTools = llm.bindTools([diceRollTool]);
+
+// Now, let’s invoke it! We expect the model to use the diceRoll tool to answer the question:
+
+const res = await llmWithTools.invoke("Roll 2 dice and tell me the result.");
+console.log(res);
+```
+
+#### Response example (AIMessage):
+
+```json
+{
+  "id": "chatcmpl-9p1Ib4xfxV4yahv2ZWm1IRb1fRVD7",
+  "content": "",
+  "additional_kwargs": {
+    "tool_calls": [
+      {
+        "id": "call_CrZkMP0AvUrz7w9kim0splbl",
+        "type": "function",
+        "function": "[Object]"
+      }
+    ]
+  },
+  "response_metadata": {
+    "tokenUsage": {
+      "completionTokens": 24,
+      "promptTokens": 93,
+      "totalTokens": 117
+    },
+    "finish_reason": "tool_calls",
+    "system_fingerprint": "fp_400f27fa1f"
+  },
+  "tool_calls": [
+    {
+      "name": "diceRoll",
+      "args": {
+        "rolls": 2
+      },
+      "type": "tool_call",
+      "id": "call_CrZkMP0AvUrz7w9kim0splbl"
+    }
+  ],
+  "invalid_tool_calls": [],
+  "usage_metadata": {
+    "input_tokens": 93,
+    "output_tokens": 24,
+    "total_tokens": 117
+  }
+}
+```
+
+## Troubleshooting
+
+### @langchain/core throws Type instantiation is excessively deep and possibly infinite when using tool()
+
+Here you can find related to this error
+https://github.com/langchain-ai/langchainjs/issues/8468
+
+**Solution:**
+For the moment the solution for @langchain/core version 0.3.72 is to use version 3.25.67 of zod.
+
+```bash
+npm install zod@3.25.67
+```
